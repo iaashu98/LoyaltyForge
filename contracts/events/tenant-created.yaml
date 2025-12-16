@@ -1,0 +1,45 @@
+# Tenant Created Event
+# Published by: Auth + Tenant Service
+# Consumed by: Other services (for setup/initialization)
+
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "loyaltyforge://events/tenant-created/v1"
+
+type: object
+title: TenantCreatedEvent
+description: Event emitted when a new tenant is created in the system.
+
+required:
+  - eventId
+  - occurredAt
+  - eventType
+  - tenantId
+  - tenantName
+  - contactEmail
+
+properties:
+  eventId:
+    type: string
+    format: uuid
+
+  occurredAt:
+    type: string
+    format: date-time
+
+  eventType:
+    type: string
+    const: TenantCreatedEvent
+
+  tenantId:
+    type: string
+    format: uuid
+    description: Newly created tenant's ID
+
+  tenantName:
+    type: string
+    minLength: 1
+    maxLength: 255
+
+  contactEmail:
+    type: string
+    format: email

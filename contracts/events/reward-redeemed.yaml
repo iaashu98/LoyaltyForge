@@ -1,0 +1,63 @@
+# Reward Redeemed Event
+# Published by: Rewards Service
+# Consumed by: None (fulfillment systems in future)
+
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "loyaltyforge://events/reward-redeemed/v1"
+
+type: object
+title: RewardRedeemedEvent
+description: Event emitted when a customer redeems a reward.
+
+required:
+  - eventId
+  - occurredAt
+  - eventType
+  - tenantId
+  - customerId
+  - rewardId
+  - rewardName
+  - pointsCost
+  - redemptionId
+  - idempotencyKey
+
+properties:
+  eventId:
+    type: string
+    format: uuid
+
+  occurredAt:
+    type: string
+    format: date-time
+
+  eventType:
+    type: string
+    const: RewardRedeemedEvent
+
+  tenantId:
+    type: string
+    format: uuid
+
+  customerId:
+    type: string
+    format: uuid
+
+  rewardId:
+    type: string
+    format: uuid
+
+  rewardName:
+    type: string
+
+  pointsCost:
+    type: integer
+    minimum: 1
+
+  redemptionId:
+    type: string
+    format: uuid
+    description: Unique redemption record ID
+
+  idempotencyKey:
+    type: string
+    description: Client-provided idempotency key

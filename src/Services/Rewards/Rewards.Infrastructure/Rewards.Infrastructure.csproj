@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Rewards.Infrastructure</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Rewards.Domain\Rewards.Domain.csproj" />
+    <ProjectReference Include="..\Rewards.Application\Rewards.Application.csproj" />
+    <ProjectReference Include="..\..\..\Shared\LoyaltyForge.Messaging\LoyaltyForge.Messaging.csproj" />
+  </ItemGroup>
+
+</Project>

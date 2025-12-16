@@ -1,0 +1,122 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: loyaltyforge-postgres
+    environment:
+      POSTGRES_USER: loyaltyforge
+      POSTGRES_PASSWORD: loyaltyforge_dev
+      POSTGRES_MULTIPLE_DATABASES: loyaltyforge_auth,loyaltyforge_ecommerce,loyaltyforge_points,loyaltyforge_rewards
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U loyaltyforge"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: loyaltyforge-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  auth-tenant:
+    build:
+      context: .
+      dockerfile: src/Services/AuthTenant/AuthTenant.Api/Dockerfile
+    container_name: loyaltyforge-auth
+    ports:
+      - "5001:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=loyaltyforge_auth;Username=loyaltyforge;Password=loyaltyforge_dev
+      - RabbitMQ__Host=rabbitmq
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  ecommerce-integration:
+    build:
+      context: .
+      dockerfile: src/Services/EcommerceIntegration/EcommerceIntegration.Api/Dockerfile
+    container_name: loyaltyforge-ecommerce
+    ports:
+      - "5002:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=loyaltyforge_ecommerce;Username=loyaltyforge;Password=loyaltyforge_dev
+      - RabbitMQ__Host=rabbitmq
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  points-engine:
+    build:
+      context: .
+      dockerfile: src/Services/PointsEngine/PointsEngine.Api/Dockerfile
+    container_name: loyaltyforge-points
+    ports:
+      - "5003:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=loyaltyforge_points;Username=loyaltyforge;Password=loyaltyforge_dev
+      - RabbitMQ__Host=rabbitmq
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  rewards:
+    build:
+      context: .
+      dockerfile: src/Services/Rewards/Rewards.Api/Dockerfile
+    container_name: loyaltyforge-rewards
+    ports:
+      - "5004:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=loyaltyforge_rewards;Username=loyaltyforge;Password=loyaltyforge_dev
+      - RabbitMQ__Host=rabbitmq
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: src/Services/ApiGateway/ApiGateway.Api/Dockerfile
+    container_name: loyaltyforge-gateway
+    ports:
+      - "5005:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    depends_on:
+      - auth-tenant
+      - ecommerce-integration
+      - points-engine
+      - rewards
+
+volumes:
+  postgres_data:
+  rabbitmq_data:

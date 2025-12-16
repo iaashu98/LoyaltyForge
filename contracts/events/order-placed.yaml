@@ -1,0 +1,95 @@
+# Order Placed Event
+# Published by: E-commerce Integration Service
+# Consumed by: Points Engine
+
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "loyaltyforge://events/order-placed/v1"
+
+type: object
+title: OrderPlacedEvent
+description: Canonical event emitted when an order is placed in any integrated e-commerce platform.
+
+required:
+  - eventId
+  - occurredAt
+  - eventType
+  - tenantId
+  - externalOrderId
+  - customerId
+  - customerEmail
+  - orderTotal
+  - currency
+  - lineItems
+  - sourcePlatform
+
+properties:
+  eventId:
+    type: string
+    format: uuid
+    description: Unique identifier for this event instance
+
+  occurredAt:
+    type: string
+    format: date-time
+    description: When the event was created (UTC)
+
+  eventType:
+    type: string
+    const: OrderPlacedEvent
+
+  tenantId:
+    type: string
+    format: uuid
+    description: Tenant this event belongs to
+
+  externalOrderId:
+    type: string
+    description: Order ID from the source platform
+
+  customerId:
+    type: string
+    format: uuid
+    description: Internal customer identifier
+
+  customerEmail:
+    type: string
+    format: email
+
+  orderTotal:
+    type: number
+    minimum: 0
+    description: Total order amount
+
+  currency:
+    type: string
+    minLength: 3
+    maxLength: 3
+    description: ISO 4217 currency code
+
+  lineItems:
+    type: array
+    items:
+      $ref: "#/$defs/lineItem"
+
+  sourcePlatform:
+    type: string
+    enum: [Shopify, WooCommerce, BigCommerce, Custom]
+
+$defs:
+  lineItem:
+    type: object
+    required: [productId, productName, quantity, unitPrice, lineTotal]
+    properties:
+      productId:
+        type: string
+      productName:
+        type: string
+      quantity:
+        type: integer
+        minimum: 1
+      unitPrice:
+        type: number
+        minimum: 0
+      lineTotal:
+        type: number
+        minimum: 0

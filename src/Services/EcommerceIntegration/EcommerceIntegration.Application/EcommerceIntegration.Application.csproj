@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>EcommerceIntegration.Application</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EcommerceIntegration.Domain\EcommerceIntegration.Domain.csproj" />
+    <ProjectReference Include="..\..\..\Shared\LoyaltyForge.Common\LoyaltyForge.Common.csproj" />
+    <ProjectReference Include="..\..\..\Shared\LoyaltyForge.Contracts\LoyaltyForge.Contracts.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,67 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+
+# Shared Libraries
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoyaltyForge.Contracts", "src\Shared\LoyaltyForge.Contracts\LoyaltyForge.Contracts.csproj", "{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoyaltyForge.Common", "src\Shared\LoyaltyForge.Common\LoyaltyForge.Common.csproj", "{A1B2C3D4-E5F6-7890-ABCD-EF1234567891}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoyaltyForge.Messaging", "src\Shared\LoyaltyForge.Messaging\LoyaltyForge.Messaging.csproj", "{A1B2C3D4-E5F6-7890-ABCD-EF1234567892}"
+EndProject
+
+# Auth + Tenant Service
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuthTenant.Domain", "src\Services\AuthTenant\AuthTenant.Domain\AuthTenant.Domain.csproj", "{B1B2C3D4-E5F6-7890-ABCD-EF1234567890}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuthTenant.Application", "src\Services\AuthTenant\AuthTenant.Application\AuthTenant.Application.csproj", "{B1B2C3D4-E5F6-7890-ABCD-EF1234567891}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuthTenant.Infrastructure", "src\Services\AuthTenant\AuthTenant.Infrastructure\AuthTenant.Infrastructure.csproj", "{B1B2C3D4-E5F6-7890-ABCD-EF1234567892}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuthTenant.Api", "src\Services\AuthTenant\AuthTenant.Api\AuthTenant.Api.csproj", "{B1B2C3D4-E5F6-7890-ABCD-EF1234567893}"
+EndProject
+
+# E-commerce Integration Service
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EcommerceIntegration.Domain", "src\Services\EcommerceIntegration\EcommerceIntegration.Domain\EcommerceIntegration.Domain.csproj", "{C1B2C3D4-E5F6-7890-ABCD-EF1234567890}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EcommerceIntegration.Application", "src\Services\EcommerceIntegration\EcommerceIntegration.Application\EcommerceIntegration.Application.csproj", "{C1B2C3D4-E5F6-7890-ABCD-EF1234567891}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EcommerceIntegration.Infrastructure", "src\Services\EcommerceIntegration\EcommerceIntegration.Infrastructure\EcommerceIntegration.Infrastructure.csproj", "{C1B2C3D4-E5F6-7890-ABCD-EF1234567892}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EcommerceIntegration.Api", "src\Services\EcommerceIntegration\EcommerceIntegration.Api\EcommerceIntegration.Api.csproj", "{C1B2C3D4-E5F6-7890-ABCD-EF1234567893}"
+EndProject
+
+# Points Engine Service
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PointsEngine.Domain", "src\Services\PointsEngine\PointsEngine.Domain\PointsEngine.Domain.csproj", "{D1B2C3D4-E5F6-7890-ABCD-EF1234567890}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PointsEngine.Application", "src\Services\PointsEngine\PointsEngine.Application\PointsEngine.Application.csproj", "{D1B2C3D4-E5F6-7890-ABCD-EF1234567891}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PointsEngine.Infrastructure", "src\Services\PointsEngine\PointsEngine.Infrastructure\PointsEngine.Infrastructure.csproj", "{D1B2C3D4-E5F6-7890-ABCD-EF1234567892}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PointsEngine.Api", "src\Services\PointsEngine\PointsEngine.Api\PointsEngine.Api.csproj", "{D1B2C3D4-E5F6-7890-ABCD-EF1234567893}"
+EndProject
+
+# Rewards Service
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rewards.Domain", "src\Services\Rewards\Rewards.Domain\Rewards.Domain.csproj", "{E1B2C3D4-E5F6-7890-ABCD-EF1234567890}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rewards.Application", "src\Services\Rewards\Rewards.Application\Rewards.Application.csproj", "{E1B2C3D4-E5F6-7890-ABCD-EF1234567891}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rewards.Infrastructure", "src\Services\Rewards\Rewards.Infrastructure\Rewards.Infrastructure.csproj", "{E1B2C3D4-E5F6-7890-ABCD-EF1234567892}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rewards.Api", "src\Services\Rewards\Rewards.Api\Rewards.Api.csproj", "{E1B2C3D4-E5F6-7890-ABCD-EF1234567893}"
+EndProject
+
+# API Gateway
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApiGateway.Api", "src\Services\ApiGateway\ApiGateway.Api\ApiGateway.Api.csproj", "{F1B2C3D4-E5F6-7890-ABCD-EF1234567890}"
+EndProject
+
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

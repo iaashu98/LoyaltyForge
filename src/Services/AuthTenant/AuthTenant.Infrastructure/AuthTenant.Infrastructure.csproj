@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>AuthTenant.Infrastructure</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AuthTenant.Domain\AuthTenant.Domain.csproj" />
+    <ProjectReference Include="..\AuthTenant.Application\AuthTenant.Application.csproj" />
+    <ProjectReference Include="..\..\..\Shared\LoyaltyForge.Common\LoyaltyForge.Common.csproj" />
+    <ProjectReference Include="..\..\..\Shared\LoyaltyForge.Messaging\LoyaltyForge.Messaging.csproj" />
+  </ItemGroup>
+
+</Project>

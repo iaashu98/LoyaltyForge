@@ -1,0 +1,59 @@
+# Points Earned Event
+# Published by: Points Engine
+# Consumed by: None (notification systems in future)
+
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "loyaltyforge://events/points-earned/v1"
+
+type: object
+title: PointsEarnedEvent
+description: Event emitted when points are credited to a customer.
+
+required:
+  - eventId
+  - occurredAt
+  - eventType
+  - tenantId
+  - customerId
+  - pointsAmount
+  - reason
+  - transactionId
+
+properties:
+  eventId:
+    type: string
+    format: uuid
+
+  occurredAt:
+    type: string
+    format: date-time
+
+  eventType:
+    type: string
+    const: PointsEarnedEvent
+
+  tenantId:
+    type: string
+    format: uuid
+
+  customerId:
+    type: string
+    format: uuid
+
+  pointsAmount:
+    type: integer
+    minimum: 1
+    description: Number of points earned
+
+  reason:
+    type: string
+    description: Human-readable reason for earning points
+
+  transactionId:
+    type: string
+    format: uuid
+    description: Unique ledger transaction ID
+
+  referenceId:
+    type: string
+    description: Optional reference to triggering entity (e.g., order ID)
