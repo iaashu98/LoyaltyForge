@@ -1,22 +1,17 @@
-#!/bin/bash
-# Script to create multiple PostgreSQL databases
+#!/bin/sh
+# LoyaltyForge Database Initialization Script
+# This script runs before schema.sql to enable required extensions
 
 set -e
 set -u
 
-function create_database() {
-    database=$1
-    echo "Creating database '$database'"
-    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" <<-EOSQL
-        CREATE DATABASE $database;
-        GRANT ALL PRIVILEGES ON DATABASE $database TO $POSTGRES_USER;
-EOSQL
-}
+echo "Initializing LoyaltyForge database..."
 
-if [ -n "$POSTGRES_MULTIPLE_DATABASES" ]; then
-    echo "Multiple database creation requested: $POSTGRES_MULTIPLE_DATABASES"
-    for db in $(echo $POSTGRES_MULTIPLE_DATABASES | tr ',' ' '); do
-        create_database $db
-    done
-    echo "Multiple databases created"
-fi
+# Enable extensions (must be done by superuser before schema.sql runs)
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+    -- Extensions are created in schema.sql, this script is for any pre-setup
+    -- Currently just a placeholder for future initialization needs
+    SELECT 'LoyaltyForge database initialized' AS status;
+EOSQL
+
+echo "LoyaltyForge database initialization complete"

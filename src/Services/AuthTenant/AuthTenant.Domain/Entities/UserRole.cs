@@ -1,27 +1,32 @@
 namespace AuthTenant.Domain.Entities;
 
 /// <summary>
-/// Join entity for User-Role many-to-many relationship.
+/// Assigns roles to users within their tenant context.
+/// Maps to: auth.user_roles
 /// </summary>
 public class UserRole
 {
-    public Guid UserId { get; private set; }
+    public Guid Id { get; private set; }
+    public Guid UserTenantId { get; private set; }
     public Guid RoleId { get; private set; }
-    public DateTime AssignedAt { get; private set; }
+    public DateTime GrantedAt { get; private set; }
+    public Guid? GrantedBy { get; private set; }  // Soft reference to user who granted
 
     // Navigation properties
-    public User User { get; private set; } = default!;
+    public UserTenant UserTenant { get; private set; } = default!;
     public Role Role { get; private set; } = default!;
 
     private UserRole() { } // EF Core constructor
 
-    public static UserRole Create(Guid userId, Guid roleId)
+    public static UserRole Create(Guid userTenantId, Guid roleId, Guid? grantedBy = null)
     {
         return new UserRole
         {
-            UserId = userId,
+            Id = Guid.NewGuid(),
+            UserTenantId = userTenantId,
             RoleId = roleId,
-            AssignedAt = DateTime.UtcNow
+            GrantedAt = DateTime.UtcNow,
+            GrantedBy = grantedBy
         };
     }
 }

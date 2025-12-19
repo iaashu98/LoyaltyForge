@@ -1,29 +1,41 @@
 using Microsoft.AspNetCore.Mvc;
 using AuthTenant.Application.Commands;
 using AuthTenant.Application.Interfaces;
-using User = AuthTenant.Domain.Entities.User;
+using AuthTenant.Domain.Entities;
 
 namespace AuthTenant.Api.Controllers;
 
 /// <summary>
 /// Controller for user management operations.
+/// Users are cross-tenant; this controller handles user-tenant mappings.
 /// </summary>
 [ApiController]
 [Route("api/tenants/{tenantId:guid}/[controller]")]
 public class UsersController : ControllerBase
 {
     private readonly IUserRepository _userRepository;
+    private readonly IUserTenantRepository _userTenantRepository;
+    private readonly ITenantRepository _tenantRepository;
+    private readonly IPasswordHasher _passwordHasher;
     private readonly ILogger<UsersController> _logger;
-    // TODO: Inject IPasswordHasher
 
-    public UsersController(IUserRepository userRepository, ILogger<UsersController> logger)
+    public UsersController(
+        IUserRepository userRepository,
+        IUserTenantRepository userTenantRepository,
+        ITenantRepository tenantRepository,
+        IPasswordHasher passwordHasher,
+        ILogger<UsersController> logger)
     {
         _userRepository = userRepository;
+        _userTenantRepository = userTenantRepository;
+        _tenantRepository = tenantRepository;
+        _passwordHasher = passwordHasher;
         _logger = logger;
     }
 
     /// <summary>
     /// Registers a new user within a tenant.
+    /// If user exists with same email+provider, creates user-tenant mapping only.
     /// </summary>
     [HttpPost]
     public async Task<ActionResult<RegisterUserResult>> RegisterUser(
@@ -31,47 +43,66 @@ public class UsersController : ControllerBase
         [FromBody] RegisterUserCommand command,
         CancellationToken cancellationToken)
     {
-        // TODO: Implement user registration
-        // 1. Validate tenant exists
-        // 2. Check email uniqueness
-        // 3. Hash password
-        // 4. Create user
-        
         _logger.LogInformation("Registering user {Email} for tenant {TenantId}", command.Email, tenantId);
-        
-        // TODO: Hash password properly
-        var user = AuthTenant.Domain.Entities.User.Create(tenantId, command.Email, "hashed_password", command.FirstName, command.LastName);
-        await _userRepository.AddAsync(user, cancellationToken);
-        
+
+        // Validate tenant exists
+        var tenant = await _tenantRepository.GetByIdAsync(tenantId, cancellationToken);
+        if (tenant is null)
+        {
+            return NotFound(new { message = "Tenant not found" });
+        }
+
+        // Check if user already exists with this email+provider
+        var user = await _userRepository.GetByEmailAndProviderAsync(command.Email, command.Provider, cancellationToken);
+
+        if (user is null)
+        {
+            // Create new user
+            var passwordHash = _passwordHasher.HashPassword(command.Password);
+            user = AuthTenant.Domain.Entities.User.CreateLocal(command.Email, passwordHash);
+            await _userRepository.AddAsync(user, cancellationToken);
+        }
+
+        // Check if user-tenant mapping already exists
+        var existingMapping = await _userTenantRepository.GetByUserAndTenantAsync(user.Id, tenantId, cancellationToken);
+        if (existingMapping != null)
+        {
+            return Conflict(new { message = "User is already registered with this tenant" });
+        }
+
+        // Create user-tenant mapping
+        var userTenant = UserTenant.Create(user.Id, tenantId, command.UserType);
+        await _userTenantRepository.AddAsync(userTenant, cancellationToken);
+
         return CreatedAtAction(
             nameof(GetUser),
-            new { tenantId, id = user.Id },
-            new RegisterUserResult(user.Id, user.Email));
+            new { tenantId, id = userTenant.Id },
+            new RegisterUserResult(user.Id, userTenant.Id, user.Email));
     }
 
     /// <summary>
-    /// Gets a user by ID.
+    /// Gets a user-tenant mapping by ID.
     /// </summary>
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<User>> GetUser(Guid tenantId, Guid id, CancellationToken cancellationToken)
+    public async Task<ActionResult<UserTenant>> GetUser(Guid tenantId, Guid id, CancellationToken cancellationToken)
     {
-        var user = await _userRepository.GetByIdAsync(id, cancellationToken);
-        
-        if (user is null || user.TenantId != tenantId)
+        var userTenant = await _userTenantRepository.GetByIdAsync(id, cancellationToken);
+
+        if (userTenant is null || userTenant.TenantId != tenantId)
         {
             return NotFound();
         }
-        
-        return Ok(user);
+
+        return Ok(userTenant);
     }
 
     /// <summary>
     /// Gets all users for a tenant.
     /// </summary>
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<User>>> GetUsers(Guid tenantId, CancellationToken cancellationToken)
+    public async Task<ActionResult<IEnumerable<UserTenant>>> GetUsers(Guid tenantId, CancellationToken cancellationToken)
     {
-        var users = await _userRepository.GetByTenantAsync(tenantId, cancellationToken);
-        return Ok(users);
+        var userTenants = await _userTenantRepository.GetByTenantAsync(tenantId, cancellationToken);
+        return Ok(userTenants);
     }
 }

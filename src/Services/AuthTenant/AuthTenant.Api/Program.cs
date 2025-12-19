@@ -1,6 +1,7 @@
 using AuthTenant.Application.Interfaces;
 using AuthTenant.Infrastructure.Persistence;
 using AuthTenant.Infrastructure.Repositories;
+using AuthTenant.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -30,7 +31,10 @@ builder.Services.AddDbContext<AuthTenantDbContext>(options =>
 // Repositories
 builder.Services.AddScoped<ITenantRepository, TenantRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-// TODO: Add IApiKeyRepository, IJwtService, IPasswordHasher implementations
+builder.Services.AddScoped<IUserTenantRepository, UserTenantRepository>();
+
+// Services
+builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 
 // Health checks
 builder.Services.AddHealthChecks()

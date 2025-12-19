@@ -20,34 +20,85 @@ public class UserRepository : IUserRepository
     public async Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await _context.Users
-            .Include(u => u.UserRoles)
-            .ThenInclude(ur => ur.Role)
+            .Include(u => u.UserTenants)
             .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
     }
 
-    public async Task<User?> GetByEmailAsync(Guid tenantId, string email, CancellationToken cancellationToken = default)
+    public async Task<User?> GetByEmailAndProviderAsync(string email, string provider, CancellationToken cancellationToken = default)
     {
         return await _context.Users
-            .Include(u => u.UserRoles)
-            .ThenInclude(ur => ur.Role)
-            .FirstOrDefaultAsync(u => u.TenantId == tenantId && u.Email == email, cancellationToken);
-    }
-
-    public async Task<IReadOnlyList<User>> GetByTenantAsync(Guid tenantId, CancellationToken cancellationToken = default)
-    {
-        return await _context.Users
-            .Where(u => u.TenantId == tenantId)
-            .ToListAsync(cancellationToken);
+            .Include(u => u.UserTenants)
+            .FirstOrDefaultAsync(u => u.Email == email && u.Provider == provider, cancellationToken);
     }
 
     public async Task AddAsync(User user, CancellationToken cancellationToken = default)
     {
         await _context.Users.AddAsync(user, cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
     }
 
-    public Task UpdateAsync(User user, CancellationToken cancellationToken = default)
+    public async Task UpdateAsync(User user, CancellationToken cancellationToken = default)
     {
         _context.Users.Update(user);
-        return Task.CompletedTask;
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+}
+
+/// <summary>
+/// EF Core implementation of IUserTenantRepository.
+/// </summary>
+public class UserTenantRepository : IUserTenantRepository
+{
+    private readonly AuthTenantDbContext _context;
+
+    public UserTenantRepository(AuthTenantDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<UserTenant?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return await _context.UserTenants
+            .Include(ut => ut.User)
+            .Include(ut => ut.UserRoles)
+                .ThenInclude(ur => ur.Role)
+            .FirstOrDefaultAsync(ut => ut.Id == id, cancellationToken);
+    }
+
+    public async Task<UserTenant?> GetByUserAndTenantAsync(Guid userId, Guid tenantId, CancellationToken cancellationToken = default)
+    {
+        return await _context.UserTenants
+            .Include(ut => ut.User)
+            .Include(ut => ut.UserRoles)
+                .ThenInclude(ur => ur.Role)
+            .FirstOrDefaultAsync(ut => ut.UserId == userId && ut.TenantId == tenantId, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<UserTenant>> GetByTenantAsync(Guid tenantId, CancellationToken cancellationToken = default)
+    {
+        return await _context.UserTenants
+            .Include(ut => ut.User)
+            .Where(ut => ut.TenantId == tenantId)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<UserTenant>> GetByUserAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        return await _context.UserTenants
+            .Include(ut => ut.Tenant)
+            .Where(ut => ut.UserId == userId)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task AddAsync(UserTenant userTenant, CancellationToken cancellationToken = default)
+    {
+        await _context.UserTenants.AddAsync(userTenant, cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task UpdateAsync(UserTenant userTenant, CancellationToken cancellationToken = default)
+    {
+        _context.UserTenants.Update(userTenant);
+        await _context.SaveChangesAsync(cancellationToken);
     }
 }

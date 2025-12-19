@@ -3,16 +3,16 @@ using PointsEngine.Domain.Entities;
 namespace PointsEngine.Application.Interfaces;
 
 /// <summary>
-/// Repository interface for points rules.
+/// Repository interface for point rules.
 /// </summary>
 public interface IRuleRepository
 {
-    Task<IReadOnlyList<PointsRule>> GetActiveRulesByTenantAsync(
-        Guid tenantId, 
+    Task<IReadOnlyList<Rule>> GetActiveByTenantAsync(
+        Guid tenantId,
         CancellationToken cancellationToken = default);
-    
-    Task<PointsRule?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
-    
-    Task AddAsync(PointsRule rule, CancellationToken cancellationToken = default);
-    Task UpdateAsync(PointsRule rule, CancellationToken cancellationToken = default);
+
+    Task<Rule?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task AddAsync(Rule rule, CancellationToken cancellationToken = default);
+    Task UpdateAsync(Rule rule, CancellationToken cancellationToken = default);
 }

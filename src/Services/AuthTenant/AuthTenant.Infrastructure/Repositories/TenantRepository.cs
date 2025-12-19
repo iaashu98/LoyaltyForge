@@ -22,9 +22,9 @@ public class TenantRepository : ITenantRepository
         return await _context.Tenants.FindAsync([id], cancellationToken);
     }
 
-    public async Task<Tenant?> GetByNameAsync(string name, CancellationToken cancellationToken = default)
+    public async Task<Tenant?> GetBySlugAsync(string slug, CancellationToken cancellationToken = default)
     {
-        return await _context.Tenants.FirstOrDefaultAsync(t => t.Name == name, cancellationToken);
+        return await _context.Tenants.FirstOrDefaultAsync(t => t.Slug == slug, cancellationToken);
     }
 
     public async Task<IReadOnlyList<Tenant>> GetAllAsync(CancellationToken cancellationToken = default)
@@ -35,11 +35,12 @@ public class TenantRepository : ITenantRepository
     public async Task AddAsync(Tenant tenant, CancellationToken cancellationToken = default)
     {
         await _context.Tenants.AddAsync(tenant, cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
     }
 
-    public Task UpdateAsync(Tenant tenant, CancellationToken cancellationToken = default)
+    public async Task UpdateAsync(Tenant tenant, CancellationToken cancellationToken = default)
     {
         _context.Tenants.Update(tenant);
-        return Task.CompletedTask;
+        await _context.SaveChangesAsync(cancellationToken);
     }
 }

@@ -1,58 +1,94 @@
-using Rewards.Domain.Enums;
-
 namespace Rewards.Domain.Entities;
 
 /// <summary>
-/// Represents a reward redemption with idempotency support.
+/// Records of reward redemptions - idempotent to prevent double-spend.
+/// Maps to: rewards.redemptions
 /// </summary>
 public class Redemption
 {
     public Guid Id { get; private set; }
     public Guid TenantId { get; private set; }
-    public Guid CustomerId { get; private set; }
+    public Guid UserId { get; private set; }
     public Guid RewardId { get; private set; }
     public string IdempotencyKey { get; private set; } = default!;
-    public int PointsSpent { get; private set; }
-    public RedemptionStatus Status { get; private set; }
-    public string? FulfillmentDetails { get; private set; }
+    public long PointsSpent { get; private set; }
+    public Guid? LedgerEntryId { get; private set; }
+    public string Status { get; private set; } = default!;
+    public string? FulfillmentData { get; private set; }  // JSON
+    public string? ExternalReference { get; private set; }
+    public DateTime? FulfilledAt { get; private set; }
+    public DateTime? ExpiresAt { get; private set; }
     public DateTime CreatedAt { get; private set; }
-    public DateTime? CompletedAt { get; private set; }
+    public DateTime UpdatedAt { get; private set; }
 
-    // Navigation properties
-    public Reward Reward { get; private set; } = default!;
+    // Navigation
+    public CatalogItem Reward { get; private set; } = default!;
 
     private Redemption() { } // EF Core constructor
 
     public static Redemption Create(
         Guid tenantId,
-        Guid customerId,
+        Guid userId,
         Guid rewardId,
         string idempotencyKey,
-        int pointsSpent)
+        long pointsSpent)
     {
         return new Redemption
         {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
-            CustomerId = customerId,
+            UserId = userId,
             RewardId = rewardId,
             IdempotencyKey = idempotencyKey,
             PointsSpent = pointsSpent,
             Status = RedemptionStatus.Pending,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
         };
     }
 
-    public void MarkCompleted(string? fulfillmentDetails = null)
+    public void LinkLedgerEntry(Guid ledgerEntryId)
     {
-        Status = RedemptionStatus.Completed;
-        FulfillmentDetails = fulfillmentDetails;
-        CompletedAt = DateTime.UtcNow;
+        LedgerEntryId = ledgerEntryId;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void MarkFulfilled(string? fulfillmentData = null, string? externalReference = null)
+    {
+        Status = RedemptionStatus.Fulfilled;
+        FulfillmentData = fulfillmentData;
+        ExternalReference = externalReference;
+        FulfilledAt = DateTime.UtcNow;
+        UpdatedAt = DateTime.UtcNow;
     }
 
     public void MarkFailed()
     {
         Status = RedemptionStatus.Failed;
-        CompletedAt = DateTime.UtcNow;
+        UpdatedAt = DateTime.UtcNow;
     }
+
+    public void MarkCancelled()
+    {
+        Status = RedemptionStatus.Cancelled;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void MarkExpired()
+    {
+        Status = RedemptionStatus.Expired;
+        UpdatedAt = DateTime.UtcNow;
+    }
+}
+
+/// <summary>
+/// Redemption status constants matching schema CHECK constraint.
+/// </summary>
+public static class RedemptionStatus
+{
+    public const string Pending = "pending";
+    public const string Fulfilled = "fulfilled";
+    public const string Expired = "expired";
+    public const string Cancelled = "cancelled";
+    public const string Failed = "failed";
 }

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using AuthTenant.Application.Commands;
 using AuthTenant.Application.Interfaces;
+using AuthTenant.Domain.Entities;
 
 namespace AuthTenant.Api.Controllers;
 
@@ -12,12 +13,19 @@ namespace AuthTenant.Api.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IUserRepository _userRepository;
+    private readonly IUserTenantRepository _userTenantRepository;
+    private readonly IPasswordHasher _passwordHasher;
     private readonly ILogger<AuthController> _logger;
-    // TODO: Inject IJwtService, IPasswordHasher
 
-    public AuthController(IUserRepository userRepository, ILogger<AuthController> logger)
+    public AuthController(
+        IUserRepository userRepository,
+        IUserTenantRepository userTenantRepository,
+        IPasswordHasher passwordHasher,
+        ILogger<AuthController> logger)
     {
         _userRepository = userRepository;
+        _userTenantRepository = userTenantRepository;
+        _passwordHasher = passwordHasher;
         _logger = logger;
     }
 
@@ -29,23 +37,32 @@ public class AuthController : ControllerBase
         [FromBody] LoginCommand command,
         CancellationToken cancellationToken)
     {
-        // TODO: Implement login logic
-        // 1. Find user by email and tenant
-        // 2. Verify password
-        // 3. Generate JWT token
-        // 4. Return token
-        
         _logger.LogInformation("Login attempt for {Email} in tenant {TenantId}", command.Email, command.TenantId);
-        
-        var user = await _userRepository.GetByEmailAsync(command.TenantId, command.Email, cancellationToken);
-        
+
+        // Find user by email (local provider) - users are cross-tenant
+        var user = await _userRepository.GetByEmailAndProviderAsync(command.Email, AuthProvider.Local, cancellationToken);
+
         if (user is null)
         {
-            return Unauthorized("Invalid credentials");
+            return Unauthorized(new { message = "Invalid credentials" });
         }
-        
-        // TODO: Verify password and generate token
-        
+
+        // Verify user has access to this tenant
+        var userTenant = await _userTenantRepository.GetByUserAndTenantAsync(user.Id, command.TenantId, cancellationToken);
+
+        if (userTenant is null)
+        {
+            return Unauthorized(new { message = "User not associated with this tenant" });
+        }
+
+        // Verify password
+        if (user.PasswordHash is null || !_passwordHasher.VerifyPassword(command.Password, user.PasswordHash))
+        {
+            return Unauthorized(new { message = "Invalid credentials" });
+        }
+
+        // TODO: Generate JWT token using IJwtService
+
         return Ok(new LoginResult("placeholder_token", DateTime.UtcNow.AddHours(1)));
     }
 }

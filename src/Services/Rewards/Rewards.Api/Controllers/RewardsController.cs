@@ -12,7 +12,7 @@ namespace Rewards.Api.Controllers;
 public class RewardsController : ControllerBase
 {
     private readonly ILogger<RewardsController> _logger;
-    // TODO: Inject IRewardRepository
+    // TODO: Inject ICatalogRepository
 
     public RewardsController(ILogger<RewardsController> logger)
     {
@@ -26,9 +26,9 @@ public class RewardsController : ControllerBase
     public async Task<IActionResult> GetRewards(Guid tenantId, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Getting rewards for tenant {TenantId}", tenantId);
-        
+
         // TODO: Implement
-        return Ok(Array.Empty<Reward>());
+        return Ok(Array.Empty<CatalogItem>());
     }
 
     /// <summary>
@@ -38,7 +38,7 @@ public class RewardsController : ControllerBase
     public async Task<IActionResult> GetReward(Guid tenantId, Guid id, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Getting reward {RewardId} for tenant {TenantId}", id, tenantId);
-        
+
         // TODO: Implement
         return NotFound();
     }
@@ -53,21 +53,22 @@ public class RewardsController : ControllerBase
         CancellationToken cancellationToken)
     {
         _logger.LogInformation("Creating reward '{Name}' for tenant {TenantId}", request.Name, tenantId);
-        
-        // TODO: Implement
-        var reward = Reward.Create(
+
+        // TODO: Implement with ICatalogRepository
+        var item = CatalogItem.Create(
             tenantId,
             request.Name,
             request.PointsCost,
             request.RewardType,
+            "{}",  // RewardValue JSON
             request.Description);
-        
-        return CreatedAtAction(nameof(GetReward), new { tenantId, id = reward.Id }, reward);
+
+        return CreatedAtAction(nameof(GetReward), new { tenantId, id = item.Id }, item);
     }
 }
 
 public record CreateRewardRequest(
     string Name,
-    int PointsCost,
+    long PointsCost,
     string RewardType,
     string? Description);

@@ -5,14 +5,15 @@ services:
     environment:
       POSTGRES_USER: loyaltyforge
       POSTGRES_PASSWORD: loyaltyforge_dev
-      POSTGRES_MULTIPLE_DATABASES: loyaltyforge_auth,loyaltyforge_ecommerce,loyaltyforge_points,loyaltyforge_rewards
+      POSTGRES_DB: loyaltyforge
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./scripts/init-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh
+      - ./scripts/init-databases.sh:/docker-entrypoint-initdb.d/01-init.sh
+      - ./scripts/schema.sql:/docker-entrypoint-initdb.d/02-schema.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U loyaltyforge"]
+      test: [ "CMD-SHELL", "pg_isready -U loyaltyforge -d loyaltyforge" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -29,7 +30,7 @@ services:
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -43,7 +44,7 @@ services:
       - "5001:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Host=postgres;Database=loyaltyforge_auth;Username=loyaltyforge;Password=loyaltyforge_dev
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=loyaltyforge;Username=loyaltyforge;Password=loyaltyforge_dev
       - RabbitMQ__Host=rabbitmq
     depends_on:
       postgres:
@@ -60,7 +61,7 @@ services:
       - "5002:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Host=postgres;Database=loyaltyforge_ecommerce;Username=loyaltyforge;Password=loyaltyforge_dev
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=loyaltyforge;Username=loyaltyforge;Password=loyaltyforge_dev
       - RabbitMQ__Host=rabbitmq
     depends_on:
       postgres:
@@ -77,7 +78,7 @@ services:
       - "5003:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Host=postgres;Database=loyaltyforge_points;Username=loyaltyforge;Password=loyaltyforge_dev
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=loyaltyforge;Username=loyaltyforge;Password=loyaltyforge_dev
       - RabbitMQ__Host=rabbitmq
     depends_on:
       postgres:
@@ -94,7 +95,7 @@ services:
       - "5004:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Host=postgres;Database=loyaltyforge_rewards;Username=loyaltyforge;Password=loyaltyforge_dev
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=loyaltyforge;Username=loyaltyforge;Password=loyaltyforge_dev
       - RabbitMQ__Host=rabbitmq
     depends_on:
       postgres:
