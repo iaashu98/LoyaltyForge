@@ -7,12 +7,13 @@ namespace PointsEngine.Application.Interfaces;
 /// </summary>
 public interface IRuleRepository
 {
-    Task<IReadOnlyList<Rule>> GetActiveByTenantAsync(
+    Task<List<Rule>> GetActiveByTenantAsync(
         Guid tenantId,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken);
 
-    Task<Rule?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
-
-    Task AddAsync(Rule rule, CancellationToken cancellationToken = default);
-    Task UpdateAsync(Rule rule, CancellationToken cancellationToken = default);
+    Task<Rule?> GetRuleByIdAsync(Guid id, CancellationToken cancellationToken);
+    Task<List<Rule>> GetAllRulesAsync(Guid tenantId, CancellationToken cancellationToken);
+    Task AddRuleAsync(Rule rule, CancellationToken cancellationToken);
+    Task UpdateRuleAsync(Rule rule, CancellationToken cancellationToken);
+    Task DeleteRuleAsync(Guid id, CancellationToken cancellationToken);
 }

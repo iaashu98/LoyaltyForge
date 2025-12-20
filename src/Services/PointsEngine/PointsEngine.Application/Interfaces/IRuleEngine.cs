@@ -1,4 +1,5 @@
 using LoyaltyForge.Contracts.Events;
+using PointsEngine.Domain.Entities;
 
 namespace PointsEngine.Application.Interfaces;
 
@@ -12,8 +13,8 @@ public interface IRuleEngine
     /// Calculates points to award for an order.
     /// </summary>
     Task<PointsCalculationResult> CalculatePointsAsync(
-        Guid tenantId, 
-        OrderPlacedEvent orderEvent, 
+        Guid tenantId,
+        OrderPlacedEvent orderEvent,
         CancellationToken cancellationToken = default);
 }
 

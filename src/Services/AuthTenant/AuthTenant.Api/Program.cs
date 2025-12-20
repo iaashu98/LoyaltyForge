@@ -36,6 +36,9 @@ builder.Services.AddScoped<IUserTenantRepository, UserTenantRepository>();
 // Services
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 
+// Unit of Work
+builder.Services.AddScoped<LoyaltyForge.Common.Interfaces.IUnitOfWork, AuthTenantUnitOfWork>();
+
 // Health checks
 builder.Services.AddHealthChecks()
     .AddNpgSql(builder.Configuration.GetConnectionString("DefaultConnection") ?? string.Empty);

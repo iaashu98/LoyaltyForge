@@ -1,5 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using PointsEngine.Infrastructure.Persistence;
+using PointsEngine.Infrastructure.Repositories;
+using PointsEngine.Application.Interfaces;
+using PointsEngine.Application.Services;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -26,13 +29,17 @@ builder.Services.AddDbContext<PointsEngineDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Repositories
-// TODO: Add repository implementations
-// builder.Services.AddScoped<IPointsLedgerRepository, PointsLedgerRepository>();
-// builder.Services.AddScoped<IPointsBalanceRepository, PointsBalanceRepository>();
-// builder.Services.AddScoped<IRuleRepository, RuleRepository>();
+builder.Services.AddScoped<IRuleRepository, RuleRepository>();
+builder.Services.AddScoped<ILedgerRepository, LedgerRepository>();
+builder.Services.AddScoped<IUserBalanceRepository, UserBalanceRepository>();
 
-// Rule Engine
-// TODO: Add IRuleEngine implementation (to be written by human)
+// Application Services
+builder.Services.AddScoped<IRuleService, RuleService>();
+builder.Services.AddScoped<ILedgerService, LedgerService>();
+builder.Services.AddScoped<IBalanceService, BalanceService>();
+
+// Unit of Work
+builder.Services.AddScoped<LoyaltyForge.Common.Interfaces.IUnitOfWork, PointsEngineUnitOfWork>();
 
 // Event consumers
 // TODO: Add RabbitMQ event consumer for OrderPlaced events

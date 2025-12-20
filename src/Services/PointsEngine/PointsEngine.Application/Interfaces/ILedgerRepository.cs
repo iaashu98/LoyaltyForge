@@ -10,6 +10,8 @@ public interface ILedgerRepository
     Task<IReadOnlyList<LedgerEntry>> GetByUserAsync(
         Guid tenantId,
         Guid userId,
+        int page = 1,
+        int pageSize = 20,
         CancellationToken cancellationToken = default);
 
     Task<LedgerEntry?> GetByIdempotencyKeyAsync(
