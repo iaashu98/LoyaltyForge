@@ -53,7 +53,7 @@ public class LedgerEntry
         };
     }
 
-    public static LedgerEntry CreateRedeem(
+    public static LedgerEntry CreateDeduct(
         Guid tenantId,
         Guid userId,
         string idempotencyKey,

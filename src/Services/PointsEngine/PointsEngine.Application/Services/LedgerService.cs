@@ -1,5 +1,6 @@
 using PointsEngine.Application.Interfaces;
 using PointsEngine.Domain.Entities;
+using LoyaltyForge.Common.Interfaces;
 
 namespace PointsEngine.Application.Services;
 
@@ -11,35 +12,98 @@ public class LedgerService : ILedgerService
 {
     private readonly ILedgerRepository _ledgerRepository;
     private readonly IUserBalanceRepository _balanceRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public LedgerService(ILedgerRepository ledgerRepository, IUserBalanceRepository balanceRepository)
+    public LedgerService(ILedgerRepository ledgerRepository, IUserBalanceRepository balanceRepository, IUnitOfWork unitOfWork)
     {
         _ledgerRepository = ledgerRepository;
         _balanceRepository = balanceRepository;
+        _unitOfWork = unitOfWork;
     }
 
-    public Task<LedgerResult> EarnPointsAsync(EarnPointsCommand command, CancellationToken cancellationToken = default)
+    public async Task<LedgerResult> EarnPointsAsync(EarnPointsCommand command, CancellationToken cancellationToken = default)
     {
-        // TODO: Implement earn points logic
-        // 1. Check idempotency key to prevent duplicates
-        // 2. Get current balance
-        // 3. Create ledger entry with balance_after
-        // 4. Update user_balances
-        // 5. All in a transaction
+        var existingEntry = await _ledgerRepository.GetByIdempotencyKeyAsync(command.TenantId, command.IdempotencyKey, cancellationToken);
+        if (existingEntry != null)
+        {
+            return new LedgerResult(existingEntry.Id, existingEntry.BalanceAfter, Success: true);
+        }
 
-        throw new NotImplementedException("Business logic to be implemented");
+        await _unitOfWork.BeginTransactionAsync(cancellationToken);
+        try
+        {
+            var balance = await _balanceRepository.GetOrCreateAsync(command.TenantId, command.UserId, cancellationToken);
+            var currentBalance = balance.AvailablePoints;
+            var newBalance = currentBalance + command.PointsAmount;
+
+            var ledgerEntry = LedgerEntry.CreateEarn(
+                tenantId: command.TenantId,
+                userId: command.UserId,
+                idempotencyKey: command.IdempotencyKey,
+                amount: command.PointsAmount,
+                balanceAfter: newBalance,
+                sourceType: command.SourceType,
+                sourceId: command.SourceId,
+                ruleId: command.RuleId,
+                description: command.Description,
+                expiresAt: command.ExpiresAt
+                );
+            await _ledgerRepository.AddAsync(ledgerEntry, cancellationToken);
+            balance.ApplyEarn(command.PointsAmount, ledgerEntry.Id);
+            await _balanceRepository.UpdateAsync(balance, cancellationToken);
+            await _unitOfWork.CommitAsync(cancellationToken);
+            return new LedgerResult(ledgerEntry.Id, ledgerEntry.BalanceAfter, Success: true);
+        }
+        catch (Exception)
+        {
+            await _unitOfWork.RollbackAsync(cancellationToken);
+            return new LedgerResult(null, 0, Success: false, Error: "Failed to earn points");
+        }
     }
 
-    public Task<LedgerResult> DeductPointsAsync(DeductPointsCommand command, CancellationToken cancellationToken = default)
+    public async Task<LedgerResult> DeductPointsAsync(DeductPointsCommand command, CancellationToken cancellationToken = default)
     {
-        // TODO: Implement deduct points logic
-        // 1. Check idempotency key
-        // 2. Verify sufficient balance
-        // 3. Create ledger entry (negative points_amount)
-        // 4. Update user_balances
-        // 5. All in a transaction
+        var existingEntry = await _ledgerRepository.GetByIdempotencyKeyAsync(command.TenantId, command.IdempotencyKey, cancellationToken);
+        if (existingEntry != null)
+        {
+            return new LedgerResult(existingEntry.Id, existingEntry.BalanceAfter, Success: true);
+        }
 
-        throw new NotImplementedException("Business logic to be implemented");
+        await _unitOfWork.BeginTransactionAsync(cancellationToken);
+        try
+        {
+            var balance = await _balanceRepository.GetOrCreateAsync(command.TenantId, command.UserId, cancellationToken);
+            var currentBalance = balance.AvailablePoints;
+
+            if (currentBalance - command.PointsAmount < 0)
+            {
+                await _unitOfWork.RollbackAsync(cancellationToken);
+                return new LedgerResult(null, currentBalance, Success: false,
+                    Error: $"Insufficient balance. Available: {currentBalance}, Required: {command.PointsAmount}");
+            }
+
+            var ledgerEntry = LedgerEntry.CreateDeduct(
+            tenantId: command.TenantId,
+            userId: command.UserId,
+            idempotencyKey: command.IdempotencyKey,
+            amount: command.PointsAmount,
+            balanceAfter: currentBalance - command.PointsAmount,
+            sourceType: command.SourceType,
+            sourceId: command.SourceId,
+            description: command.Description
+            );
+
+            await _ledgerRepository.AddAsync(ledgerEntry, cancellationToken);
+            balance.ApplyRedeem(command.PointsAmount, ledgerEntry.Id);
+            await _balanceRepository.UpdateAsync(balance, cancellationToken);
+            await _unitOfWork.CommitAsync(cancellationToken);
+            return new LedgerResult(ledgerEntry.Id, ledgerEntry.BalanceAfter, Success: true);
+        }
+        catch (Exception)
+        {
+            await _unitOfWork.RollbackAsync(cancellationToken);
+            return new LedgerResult(null, 0, Success: false, Error: "Failed to deduct points");
+        }
     }
 
     public Task<LedgerResult> ReversePointsAsync(ReversePointsCommand command, CancellationToken cancellationToken = default)
