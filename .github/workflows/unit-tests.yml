@@ -1,0 +1,61 @@
+name: Unit Tests Only
+
+on:
+  push:
+    branches: [ main, develop, feature/** ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  DOTNET_VERSION: '9.0.x'
+
+jobs:
+  unit-tests:
+    name: Run Unit Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+        
+    - name: Restore dependencies
+      run: dotnet restore
+      
+    - name: Build test projects
+      run: |
+        dotnet build tests/Unit/Rewards.Application.Tests/Rewards.Application.Tests.csproj --configuration Release
+        dotnet build tests/Unit/PointsEngine.Application.Tests/PointsEngine.Application.Tests.csproj --configuration Release
+        
+    - name: Run Rewards Service Tests
+      run: |
+        dotnet test tests/Unit/Rewards.Application.Tests/Rewards.Application.Tests.csproj \
+          --no-build \
+          --configuration Release \
+          --verbosity normal \
+          --logger "trx;LogFileName=rewards-test-results.trx" \
+          --results-directory ./TestResults/Rewards
+      continue-on-error: true
+      
+    - name: Run Points Engine Tests
+      run: |
+        dotnet test tests/Unit/PointsEngine.Application.Tests/PointsEngine.Application.Tests.csproj \
+          --no-build \
+          --configuration Release \
+          --verbosity normal \
+          --logger "trx;LogFileName=points-test-results.trx" \
+          --results-directory ./TestResults/PointsEngine
+      continue-on-error: true
+      
+    - name: Publish test results
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      if: always()
+      with:
+        files: |
+          TestResults/**/*.trx
+        check_name: Unit Test Results Summary
+        comment_mode: always
