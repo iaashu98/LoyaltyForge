@@ -128,34 +128,49 @@ GET /api/tenants/7925045c-01b7-4609-a837-9359cd04b206/users/550e8400-e29b-41d4-a
 
 ## 3. Authentication
 
-### 3.1 Login
+### 3.1 Login ✅ TESTED
 **Endpoint:** `POST /api/auth/login`
 
 **Request Body:**
 ```json
 {
-  "email": "john@example.com",
-  "password": "SecurePass123!",
-  "tenantSlug": "acme-store"
+  "TenantSlug": "acme-store",
+  "Email": "testuser@example.com",
+  "Password": "TestPass123!"
 }
 ```
 
 **Expected Response (200 OK):**
 ```json
 {
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "userId": "550e8400-e29b-41d4-a716-446655440000",
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyN2ZlMmMzMy01OTg1LTQ1ODctYmZjOS00MzY1YzBiZmRlMjYiLCJlbWFpbCI6InRlc3R1c2VyQGV4YW1wbGUuY29tIiwianRpIjoiZWNlZGNkMzctYmYxMy00MGFiLWE5ODUtNjQ0MTRlMjczMWY4IiwidGVuYW50SWQiOiI3OTI1MDQ1Yy0wMWI3LTQ2MDktYTgzNy05MzU5Y2QwNGIyMDYiLCJ1c2VySWQiOiIyN2ZlMmMzMy01OTg1LTQ1ODctYmZjOS00MzY1YzBiZmRlMjYiLCJleHAiOjE3NjgwNjk2NjQsImlzcyI6ImxveWFsdHlmb3JnZSIsImF1ZCI6ImxveWFsdHlmb3JnZS1hcGkifQ._XGevQqPDBRjqVGKSShEAO9fEg3n9fjvEeDDpWsQwHM",
+  "userId": "27fe2c33-5985-4587-bfc9-4365c0bfde26",
   "tenantId": "7925045c-01b7-4609-a837-9359cd04b206",
-  "expiresAt": "2026-01-11T10:00:00Z"
+  "expiresAt": "2026-01-11T17:27:44Z"
+}
+```
+
+**JWT Token Claims (decoded at jwt.io):**
+```json
+{
+  "sub": "27fe2c33-5985-4587-bfc9-4365c0bfde26",
+  "email": "testuser@example.com",
+  "jti": "ecedcd37-bf13-40ab-a985-64414e2731f8",
+  "tenantId": "7925045c-01b7-4609-a837-9359cd04b206",
+  "userId": "27fe2c33-5985-4587-bfc9-4365c0bfde26",
+  "exp": 1768069664,
+  "iss": "loyaltyforge",
+  "aud": "loyaltyforge-api"
 }
 ```
 
 **Test Scenarios:**
-- ✅ Valid credentials
+- ✅ Valid credentials returns JWT token
+- ✅ Token contains userId, tenantId, email claims
+- ✅ Token expires after configured time (60 minutes)
 - ❌ Wrong password (401 Unauthorized)
 - ❌ Non-existent email (401 Unauthorized)
-- ❌ Invalid tenant slug (404 Not Found)
-- ❌ Suspended user (403 Forbidden)
+- ❌ Invalid tenant slug (401 Unauthorized)
 
 ---
 

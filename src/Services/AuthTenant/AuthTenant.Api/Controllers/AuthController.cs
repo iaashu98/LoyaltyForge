@@ -16,17 +16,23 @@ public class AuthController : ControllerBase
     private readonly IUserTenantRepository _userTenantRepository;
     private readonly IPasswordHasher _passwordHasher;
     private readonly ILogger<AuthController> _logger;
+    private readonly IJwtService _jwtService;
+    private readonly ITenantRepository _tenantRepository;
 
     public AuthController(
         IUserRepository userRepository,
         IUserTenantRepository userTenantRepository,
         IPasswordHasher passwordHasher,
-        ILogger<AuthController> logger)
+        ILogger<AuthController> logger,
+        IJwtService jwtService,
+        ITenantRepository tenantRepository)
     {
         _userRepository = userRepository;
         _userTenantRepository = userTenantRepository;
         _passwordHasher = passwordHasher;
         _logger = logger;
+        _jwtService = jwtService;
+        _tenantRepository = tenantRepository;
     }
 
     /// <summary>
@@ -37,32 +43,36 @@ public class AuthController : ControllerBase
         [FromBody] LoginCommand command,
         CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Login attempt for {Email} in tenant {TenantId}", command.Email, command.TenantId);
+        // 1. Get tenant by tenantId
+        var tenant = await _tenantRepository.GetBySlugAsync(command.TenantSlug, cancellationToken);
+        if (tenant is null)
+        {
+            return Unauthorized(new { message = "Tenant not found!" });
+        }
 
-        // Find user by email (local provider) - users are cross-tenant
+        // 2. Get user by email
         var user = await _userRepository.GetByEmailAndProviderAsync(command.Email, AuthProvider.Local, cancellationToken);
-
         if (user is null)
         {
-            return Unauthorized(new { message = "Invalid credentials" });
+            return Unauthorized(new { message = "Invalid email" });
         }
 
-        // Verify user has access to this tenant
-        var userTenant = await _userTenantRepository.GetByUserAndTenantAsync(user.Id, command.TenantId, cancellationToken);
-
-        if (userTenant is null)
-        {
-            return Unauthorized(new { message = "User not associated with this tenant" });
-        }
-
-        // Verify password
-        if (user.PasswordHash is null || !_passwordHasher.VerifyPassword(command.Password, user.PasswordHash))
+        if (!_passwordHasher.VerifyPassword(command.Password, user.PasswordHash!))
         {
             return Unauthorized(new { message = "Invalid credentials" });
         }
-
-        // TODO: Generate JWT token using IJwtService
-
-        return Ok(new LoginResult("placeholder_token", DateTime.UtcNow.AddHours(1)));
+        // 4. Generate JWT token ← NEW LOGIC
+        var token = _jwtService.GenerateToken(
+            user.Id,
+            tenant.Id,
+            user.Email,
+            roles: null); // TODO: Add roles when implemented
+        var expiresAt = DateTime.UtcNow.AddHours(24);
+        // 5. Return token
+        return Ok(new LoginResult(
+            token,
+            user.Id,
+            tenant.Id,
+            expiresAt));
     }
 }

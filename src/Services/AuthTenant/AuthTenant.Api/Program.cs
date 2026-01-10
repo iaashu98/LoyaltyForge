@@ -35,6 +35,7 @@ builder.Services.AddScoped<IUserTenantRepository, UserTenantRepository>();
 
 // Services
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
+builder.Services.AddScoped<IJwtService, JwtService>();
 
 // Unit of Work
 builder.Services.AddScoped<LoyaltyForge.Common.Interfaces.IUnitOfWork, AuthTenantUnitOfWork>();
