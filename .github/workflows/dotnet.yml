@@ -1,0 +1,56 @@
+# This workflow will build and test a .NET microservices solution
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
+
+name: .NET Build and Test
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        configuration: [Debug, Release]
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+
+    - name: Restore dependencies
+      run: dotnet restore LoyaltyForge.sln
+
+    - name: Build solution
+      run: dotnet build LoyaltyForge.sln --configuration ${{ matrix.configuration }} --no-restore
+
+    # Uncomment when you add test projects
+    # - name: Run tests
+    #   run: dotnet test LoyaltyForge.sln --configuration ${{ matrix.configuration }} --no-build --verbosity normal
+
+    - name: Publish artifacts
+      if: matrix.configuration == 'Release'
+      run: |
+        dotnet publish src/Services/AuthTenant/AuthTenant.Api/AuthTenant.Api.csproj -c Release -o ./publish/AuthTenant
+        dotnet publish src/Services/EcommerceIntegration/EcommerceIntegration.Api/EcommerceIntegration.Api.csproj -c Release -o ./publish/EcommerceIntegration
+        dotnet publish src/Services/PointsEngine/PointsEngine.Api/PointsEngine.Api.csproj -c Release -o ./publish/PointsEngine
+        dotnet publish src/Services/Rewards/Rewards.Api/Rewards.Api.csproj -c Release -o ./publish/Rewards
+        dotnet publish src/Services/ApiGateway/ApiGateway.Api/ApiGateway.Api.csproj -c Release -o ./publish/ApiGateway
+
+    - name: Upload build artifacts
+      if: matrix.configuration == 'Release'
+      uses: actions/upload-artifact@v4
+      with:
+        name: published-services
+        path: ./publish/
+        retention-days: 7
