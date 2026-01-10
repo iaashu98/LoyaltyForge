@@ -4,7 +4,7 @@ namespace Rewards.Domain.Entities;
 /// Available rewards that customers can redeem.
 /// Maps to: rewards.catalog
 /// </summary>
-public class CatalogItem
+public class RewardCatalog
 {
     public Guid Id { get; private set; }
     public Guid TenantId { get; private set; }
@@ -25,9 +25,9 @@ public class CatalogItem
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
 
-    private CatalogItem() { } // EF Core constructor
+    private RewardCatalog() { } // EF Core constructor
 
-    public static CatalogItem Create(
+    public static RewardCatalog Create(
         Guid tenantId,
         string name,
         long pointsCost,
@@ -40,7 +40,7 @@ public class CatalogItem
     {
         var isLimited = totalQuantity.HasValue;
 
-        return new CatalogItem
+        return new RewardCatalog
         {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
@@ -60,6 +60,38 @@ public class CatalogItem
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
+    }
+
+    /// <summary>
+    /// Update reward details
+    /// </summary>
+    public void Update(
+        string? name = null,
+        long? pointsCost = null,
+        string? rewardType = null,
+        string? rewardValue = null,
+        string? description = null,
+        int? totalQuantity = null,
+        int? maxPerUser = null,
+        string? imageUrl = null)
+    {
+        if (name is not null)
+            Name = name;
+        if (pointsCost is not null)
+            PointsCost = pointsCost.Value;
+        if (rewardType is not null)
+            RewardType = rewardType;
+        if (rewardValue is not null)
+            RewardValue = rewardValue;
+        if (description is not null)
+            Description = description;
+        if (totalQuantity is not null)
+            TotalQuantity = totalQuantity.Value;
+        if (maxPerUser is not null)
+            MaxPerUser = maxPerUser.Value;
+        if (imageUrl is not null)
+            ImageUrl = imageUrl;
+        UpdatedAt = DateTime.UtcNow;
     }
 
     /// <summary>

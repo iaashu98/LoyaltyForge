@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using Rewards.Application.Interfaces;
 using Rewards.Infrastructure.Persistence;
+using Rewards.Infrastructure.Repositories;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -32,7 +34,8 @@ builder.Services.AddHttpClient("PointsService", client =>
 });
 
 // Repositories
-// TODO: Add repository implementations
+builder.Services.AddScoped<IRewardRepository, RewardRepository>();
+builder.Services.AddScoped<IRedemptionRepository, RedemptionRepository>();
 
 // Health checks
 builder.Services.AddHealthChecks()

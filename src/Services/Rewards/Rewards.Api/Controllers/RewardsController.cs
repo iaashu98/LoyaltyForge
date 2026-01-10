@@ -12,23 +12,24 @@ namespace Rewards.Api.Controllers;
 public class RewardsController : ControllerBase
 {
     private readonly ILogger<RewardsController> _logger;
-    // TODO: Inject ICatalogRepository
+    private readonly IRewardRepository _rewardRepository;
 
-    public RewardsController(ILogger<RewardsController> logger)
+    public RewardsController(ILogger<RewardsController> logger, IRewardRepository rewardRepository)
     {
         _logger = logger;
+        _rewardRepository = rewardRepository;
     }
 
     /// <summary>
     /// Gets all rewards in the tenant catalog.
     /// </summary>
     [HttpGet]
-    public async Task<IActionResult> GetRewards(Guid tenantId, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetRewards(Guid tenantId, [FromQuery] bool activeOnly = true, CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Getting rewards for tenant {TenantId}", tenantId);
 
-        // TODO: Implement
-        return Ok(Array.Empty<CatalogItem>());
+        var rewards = await _rewardRepository.GetAllByTenantAsync(tenantId, activeOnly, cancellationToken);
+        return Ok(rewards.Select(x => new RewardResponse(x)));
     }
 
     /// <summary>
@@ -39,8 +40,12 @@ public class RewardsController : ControllerBase
     {
         _logger.LogInformation("Getting reward {RewardId} for tenant {TenantId}", id, tenantId);
 
-        // TODO: Implement
-        return NotFound();
+        var reward = await _rewardRepository.GetByIdAsync(id, cancellationToken);
+        if (reward is null)
+        {
+            return NotFound();
+        }
+        return Ok(new RewardResponse(reward));
     }
 
     /// <summary>
@@ -54,21 +59,106 @@ public class RewardsController : ControllerBase
     {
         _logger.LogInformation("Creating reward '{Name}' for tenant {TenantId}", request.Name, tenantId);
 
-        // TODO: Implement with ICatalogRepository
-        var item = CatalogItem.Create(
+        var reward = RewardCatalog.Create(
             tenantId,
             request.Name,
             request.PointsCost,
             request.RewardType,
-            "{}",  // RewardValue JSON
+            request.RewardValue,
             request.Description);
 
-        return CreatedAtAction(nameof(GetReward), new { tenantId, id = item.Id }, item);
+        await _rewardRepository.AddAsync(reward, cancellationToken);
+        await _rewardRepository.SaveChangesAsync(cancellationToken);
+        return CreatedAtAction(nameof(GetReward), new { tenantId, id = reward.Id }, new RewardResponse(reward));
     }
+
+    /// <summary>
+    /// Updates an existing reward in the catalog.
+    /// </summary>
+    [HttpPut("{id:guid}")]
+    public async Task<RewardResponse> UpdateReward(
+        Guid tenantId,
+        Guid id,
+        [FromBody] UpdateRewardRequest request,
+        CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("Updating reward {RewardId} for tenant {TenantId}", id, tenantId);
+
+        var item = await _rewardRepository.GetByIdAsync(id, cancellationToken);
+        if (item is null)
+        {
+            throw new Exception("Reward not found");
+        }
+
+        item.Update(
+            request.Name,
+            request.PointsCost,
+            request.RewardType,
+            request.RewardValue,
+            request.Description);
+        await _rewardRepository.UpdateAsync(item, cancellationToken);
+        await _rewardRepository.SaveChangesAsync(cancellationToken);
+        return new RewardResponse(item);
+    }
+
+    /// <summary>
+    /// Deletes a reward from the catalog.
+    /// </summary>
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> DeleteReward(Guid tenantId, Guid id, CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("Deleting reward {RewardId} for tenant {TenantId}", id, tenantId);
+
+        var reward = await _rewardRepository.GetByIdAsync(id, cancellationToken);
+        if (reward is null)
+        {
+            return NotFound();
+        }
+        await _rewardRepository.DeleteAsync(reward, cancellationToken);
+        await _rewardRepository.SaveChangesAsync(cancellationToken);
+        return Ok();
+    }
+
+
 }
 
 public record CreateRewardRequest(
     string Name,
     long PointsCost,
     string RewardType,
-    string? Description);
+    string RewardValue,
+    string? Description,
+    int? TotalQuantity = null);
+
+public record UpdateRewardRequest(
+    string Name,
+    long PointsCost,
+    string RewardType,
+    string RewardValue,
+    string? Description,
+    int? TotalQuantity = null);
+
+public record RewardResponse(
+    Guid Id,
+    Guid TenantId,
+    string Name,
+    string? Description,
+    long PointsCost,
+    int? TotalQuantity,
+    bool IsActive,
+    DateTime CreatedAt,
+    DateTime UpdatedAt)
+{
+    public RewardResponse(RewardCatalog reward) : this(
+        reward.Id,
+        reward.TenantId,
+        reward.Name,
+        reward.Description,
+        reward.PointsCost,
+        reward.TotalQuantity,
+        reward.IsActive,
+        reward.CreatedAt,
+        reward.UpdatedAt)
+    {
+    }
+}

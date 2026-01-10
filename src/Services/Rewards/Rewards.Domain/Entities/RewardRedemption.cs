@@ -4,7 +4,7 @@ namespace Rewards.Domain.Entities;
 /// Records of reward redemptions - idempotent to prevent double-spend.
 /// Maps to: rewards.redemptions
 /// </summary>
-public class Redemption
+public class RewardRedemption
 {
     public Guid Id { get; private set; }
     public Guid TenantId { get; private set; }
@@ -22,18 +22,18 @@ public class Redemption
     public DateTime UpdatedAt { get; private set; }
 
     // Navigation
-    public CatalogItem Reward { get; private set; } = default!;
+    public RewardCatalog Reward { get; private set; } = default!;
 
-    private Redemption() { } // EF Core constructor
+    private RewardRedemption() { } // EF Core constructor
 
-    public static Redemption Create(
+    public static RewardRedemption Create(
         Guid tenantId,
         Guid userId,
         Guid rewardId,
         string idempotencyKey,
         long pointsSpent)
     {
-        return new Redemption
+        return new RewardRedemption
         {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
@@ -41,7 +41,7 @@ public class Redemption
             RewardId = rewardId,
             IdempotencyKey = idempotencyKey,
             PointsSpent = pointsSpent,
-            Status = RedemptionStatus.Pending,
+            Status = RewardRedemptionStatus.Pending,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -55,7 +55,7 @@ public class Redemption
 
     public void MarkFulfilled(string? fulfillmentData = null, string? externalReference = null)
     {
-        Status = RedemptionStatus.Fulfilled;
+        Status = RewardRedemptionStatus.Fulfilled;
         FulfillmentData = fulfillmentData;
         ExternalReference = externalReference;
         FulfilledAt = DateTime.UtcNow;
@@ -64,19 +64,19 @@ public class Redemption
 
     public void MarkFailed()
     {
-        Status = RedemptionStatus.Failed;
+        Status = RewardRedemptionStatus.Failed;
         UpdatedAt = DateTime.UtcNow;
     }
 
     public void MarkCancelled()
     {
-        Status = RedemptionStatus.Cancelled;
+        Status = RewardRedemptionStatus.Cancelled;
         UpdatedAt = DateTime.UtcNow;
     }
 
     public void MarkExpired()
     {
-        Status = RedemptionStatus.Expired;
+        Status = RewardRedemptionStatus.Expired;
         UpdatedAt = DateTime.UtcNow;
     }
 }
@@ -84,7 +84,7 @@ public class Redemption
 /// <summary>
 /// Redemption status constants matching schema CHECK constraint.
 /// </summary>
-public static class RedemptionStatus
+public static class RewardRedemptionStatus
 {
     public const string Pending = "pending";
     public const string Fulfilled = "fulfilled";

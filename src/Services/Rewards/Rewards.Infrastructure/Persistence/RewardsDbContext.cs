@@ -13,8 +13,8 @@ public class RewardsDbContext : DbContext
     {
     }
 
-    public DbSet<CatalogItem> Catalog => Set<CatalogItem>();
-    public DbSet<Redemption> Redemptions => Set<Redemption>();
+    public DbSet<RewardCatalog> RewardCatalogs => Set<RewardCatalog>();
+    public DbSet<RewardRedemption> RewardRedemptions => Set<RewardRedemption>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -24,7 +24,7 @@ public class RewardsDbContext : DbContext
         modelBuilder.HasDefaultSchema("rewards");
 
         // CatalogItem configuration
-        modelBuilder.Entity<CatalogItem>(entity =>
+        modelBuilder.Entity<RewardCatalog>(entity =>
         {
             entity.ToTable("catalog");
             entity.HasKey(e => e.Id);
@@ -52,7 +52,7 @@ public class RewardsDbContext : DbContext
         });
 
         // Redemption configuration
-        modelBuilder.Entity<Redemption>(entity =>
+        modelBuilder.Entity<RewardRedemption>(entity =>
         {
             entity.ToTable("redemptions");
             entity.HasKey(e => e.Id);
