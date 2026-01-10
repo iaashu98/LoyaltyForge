@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using EcommerceIntegration.Application.Interfaces;
 using EcommerceIntegration.Application.DTOs.Shopify;
 using LoyaltyForge.Messaging.RabbitMQ;
+using LoyaltyForge.Common.Outbox;
+using LoyaltyForge.Contracts.Events;
 using System.Text.Json;
 
 namespace EcommerceIntegration.Api.Controllers;
@@ -15,16 +17,18 @@ public class ShopifyWebhookController : ControllerBase
 {
     private readonly IWebhookSignatureValidator _signatureValidator;
     private readonly IEventTransformer<ShopifyOrderPayload> _orderTransformer;
+    private readonly IOutboxRepository _outboxRepository;
     private readonly ILogger<ShopifyWebhookController> _logger;
-    // TODO: Inject IEventPublisher
 
     public ShopifyWebhookController(
         IWebhookSignatureValidator signatureValidator,
         IEventTransformer<ShopifyOrderPayload> orderTransformer,
+        IOutboxRepository outboxRepository,
         ILogger<ShopifyWebhookController> logger)
     {
         _signatureValidator = signatureValidator;
         _orderTransformer = orderTransformer;
+        _outboxRepository = outboxRepository;
         _logger = logger;
     }
 
@@ -64,10 +68,24 @@ public class ShopifyWebhookController : ControllerBase
 
         var canonicalEvent = _orderTransformer.Transform(tenantId, shopifyOrder);
 
-        // TODO: Publish to RabbitMQ
-        _logger.LogInformation("Transformed order {OrderId} to canonical event", shopifyOrder.Id);
+        // Save event to outbox for reliable publishing
+        var outboxMessage = new OutboxMessage
+        {
+            Id = Guid.NewGuid(),
+            EventType = canonicalEvent.EventType,
+            Payload = JsonSerializer.Serialize(canonicalEvent),
+            CreatedAt = DateTime.UtcNow,
+            TenantId = tenantId
+        };
 
-        return Ok(new { received = true });
+        await _outboxRepository.AddAsync(outboxMessage, cancellationToken);
+
+        _logger.LogInformation(
+            "Saved OrderPlacedEvent to outbox for order {OrderId}, tenant {TenantId}",
+            shopifyOrder.Id,
+            tenantId);
+
+        return Ok(new { received = true, eventId = canonicalEvent.EventId });
     }
 
     /// <summary>

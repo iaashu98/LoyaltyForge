@@ -29,6 +29,11 @@ public class RedemptionRepository : IRedemptionRepository
         return await _context.RewardRedemptions.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
     }
 
+    public async Task<RewardRedemption?> GetByIdAsync(Guid id, Guid tenantId, CancellationToken cancellationToken = default)
+    {
+        return await _context.RewardRedemptions.FirstOrDefaultAsync(x => x.Id == id && x.TenantId == tenantId, cancellationToken);
+    }
+
     public async Task<RewardRedemption?> GetByIdempotencyKeyAsync(Guid tenantId, string idempotencyKey, CancellationToken cancellationToken = default)
     {
         return await _context.RewardRedemptions.FirstOrDefaultAsync(x => x.TenantId == tenantId && x.IdempotencyKey == idempotencyKey, cancellationToken);

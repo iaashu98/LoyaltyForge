@@ -3,6 +3,7 @@ using Rewards.Application.Interfaces;
 using Rewards.Infrastructure.Persistence;
 using Rewards.Infrastructure.Repositories;
 using Serilog;
+using LoyaltyForge.Messaging.RabbitMQ;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,6 +37,27 @@ builder.Services.AddHttpClient("PointsService", client =>
 // Repositories
 builder.Services.AddScoped<IRewardRepository, RewardRepository>();
 builder.Services.AddScoped<IRedemptionRepository, RedemptionRepository>();
+
+// Saga
+builder.Services.AddScoped<Rewards.Application.Sagas.RedemptionSaga>();
+
+// RabbitMQ Configuration
+builder.Services.Configure<LoyaltyForge.Messaging.RabbitMQ.RabbitMQOptions>(
+    builder.Configuration.GetSection("RabbitMQ"));
+
+// RabbitMQ Command Publisher
+builder.Services.AddRabbitMQCommandPublisher();
+
+// RabbitMQ Event Consumer
+builder.Services.AddRabbitMQEventConsumer(config =>
+{
+    config.SubscribeToEvent<LoyaltyForge.Contracts.Events.PointsDeductedEvent>("points.deducted");
+    config.SubscribeToEvent<LoyaltyForge.Contracts.Events.PointsDeductionFailedEvent>("points.deduction.failed");
+});
+
+// Event Handlers
+builder.Services.AddEventHandler<LoyaltyForge.Contracts.Events.PointsDeductedEvent, Rewards.Application.EventHandlers.PointsDeductedEventHandler>();
+builder.Services.AddEventHandler<LoyaltyForge.Contracts.Events.PointsDeductionFailedEvent, Rewards.Application.EventHandlers.PointsDeductionFailedEventHandler>();
 
 // Health checks
 builder.Services.AddHealthChecks()

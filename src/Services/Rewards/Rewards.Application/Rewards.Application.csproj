@@ -11,6 +11,7 @@
     <ProjectReference Include="..\Rewards.Domain\Rewards.Domain.csproj" />
     <ProjectReference Include="..\..\..\Shared\LoyaltyForge.Common\LoyaltyForge.Common.csproj" />
     <ProjectReference Include="..\..\..\Shared\LoyaltyForge.Contracts\LoyaltyForge.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\Shared\LoyaltyForge.Messaging\LoyaltyForge.Messaging.csproj" />
   </ItemGroup>
 
 </Project>

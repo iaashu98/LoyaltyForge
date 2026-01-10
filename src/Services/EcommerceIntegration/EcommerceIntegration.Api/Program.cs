@@ -1,7 +1,9 @@
 using EcommerceIntegration.Application.Interfaces;
 using EcommerceIntegration.Application.DTOs.Shopify;
 using EcommerceIntegration.Infrastructure.Shopify;
+using EcommerceIntegration.Infrastructure.Persistence;
 using LoyaltyForge.Messaging.RabbitMQ;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,8 +29,22 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddScoped<IWebhookSignatureValidator, ShopifySignatureValidator>();
 builder.Services.AddScoped<IEventTransformer<ShopifyOrderPayload>, ShopifyOrderTransformer>();
 
-// Messaging
-// TODO: Add RabbitMQ event publisher
+// Database
+builder.Services.AddDbContext<IntegrationDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Outbox Repository
+builder.Services.AddScoped<LoyaltyForge.Common.Outbox.IOutboxRepository, EcommerceIntegration.Infrastructure.Repositories.OutboxRepository>();
+
+// RabbitMQ Configuration
+builder.Services.Configure<LoyaltyForge.Messaging.RabbitMQ.RabbitMQOptions>(
+    builder.Configuration.GetSection("RabbitMQ"));
+
+// RabbitMQ Event Publisher
+builder.Services.AddRabbitMQEventPublisher();
+
+// Outbox Publisher Background Service
+builder.Services.AddHostedService<LoyaltyForge.Messaging.Outbox.OutboxPublisher>();
 
 // Health checks
 builder.Services.AddHealthChecks();

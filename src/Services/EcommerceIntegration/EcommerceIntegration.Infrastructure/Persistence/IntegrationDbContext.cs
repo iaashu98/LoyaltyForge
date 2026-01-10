@@ -1,5 +1,6 @@
 using EcommerceIntegration.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using LoyaltyForge.Common.Outbox;
 
 namespace EcommerceIntegration.Infrastructure.Persistence;
 
@@ -15,6 +16,7 @@ public class IntegrationDbContext : DbContext
 
     public DbSet<WebhookLog> WebhookLogs => Set<WebhookLog>();
     public DbSet<ExternalEvent> ExternalEvents => Set<ExternalEvent>();
+    public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -74,6 +76,24 @@ public class IntegrationDbContext : DbContext
                 .WithMany(w => w.ExternalEvents)
                 .HasForeignKey(e => e.WebhookLogId)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // OutboxMessage configuration
+        modelBuilder.Entity<OutboxMessage>(entity =>
+        {
+            entity.ToTable("outbox_messages");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.EventType).HasColumnName("event_type").HasMaxLength(255).IsRequired();
+            entity.Property(e => e.Payload).HasColumnName("payload").HasColumnType("jsonb").IsRequired();
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at").IsRequired();
+            entity.Property(e => e.ProcessedAt).HasColumnName("processed_at");
+            entity.Property(e => e.RetryCount).HasColumnName("retry_count").HasDefaultValue(0);
+            entity.Property(e => e.LastError).HasColumnName("last_error");
+            entity.Property(e => e.TenantId).HasColumnName("tenant_id").IsRequired();
+
+            entity.HasIndex(e => e.ProcessedAt).HasFilter("processed_at IS NULL");
+            entity.HasIndex(e => new { e.TenantId, e.CreatedAt });
         });
     }
 }
