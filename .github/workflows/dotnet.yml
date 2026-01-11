@@ -38,35 +38,30 @@ jobs:
           --configuration Release \
           --verbosity normal \
           --logger "trx;LogFileName=pointsengine-api-results.trx" \
-          --collect:"XPlat Code Coverage" \
           --results-directory ./TestResults
         dotnet test tests/Unit/PointsEngine.Tests/PointsEngine.Application.Tests/PointsEngine.Application.Tests.csproj \
           --no-build \
           --configuration Release \
           --verbosity normal \
           --logger "trx;LogFileName=pointsengine-app-results.trx" \
-          --collect:"XPlat Code Coverage" \
           --results-directory ./TestResults
         dotnet test tests/Unit/Rewards.Tests/Rewards.Api.Tests/Rewards.Api.Tests.csproj \
           --no-build \
           --configuration Release \
           --verbosity normal \
           --logger "trx;LogFileName=rewards-results.trx" \
-          --collect:"XPlat Code Coverage" \
           --results-directory ./TestResults
         dotnet test tests/Unit/AuthTenant.Tests/AuthTenant.Api.Tests/AuthTenant.Api.Tests.csproj \
           --no-build \
           --configuration Release \
           --verbosity normal \
           --logger "trx;LogFileName=authtenant-results.trx" \
-          --collect:"XPlat Code Coverage" \
           --results-directory ./TestResults
         dotnet test tests/Unit/EcommerceIntegration.Tests/EcommerceIntegration.Api.Tests/EcommerceIntegration.Api.Tests.csproj \
           --no-build \
           --configuration Release \
           --verbosity normal \
           --logger "trx;LogFileName=ecommerce-results.trx" \
-          --collect:"XPlat Code Coverage" \
           --results-directory ./TestResults
       continue-on-error: true
       
@@ -77,19 +72,6 @@ jobs:
         files: |
           TestResults/**/*.trx
         check_name: Unit Test Results
-        
-    - name: Upload coverage reports
-      uses: codecov/codecov-action@v4
-      if: always()
-      with:
-        directory: ./TestResults
-        flags: unittests
-        name: codecov-umbrella
-        fail_ci_if_error: false
-        verbose: true
-      env:
-        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-      continue-on-error: true
 
   build-services:
     name: Build Services
