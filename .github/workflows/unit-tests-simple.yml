@@ -1,0 +1,77 @@
+name: Unit Tests Only
+
+on:
+  push:
+    branches: [ main, develop, feature/** ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  DOTNET_VERSION: '9.0.x'
+
+jobs:
+  unit-tests:
+    name: Run Unit Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+        
+    - name: Restore dependencies
+      run: dotnet restore
+      
+    - name: Build solution
+      run: dotnet build --configuration Release --no-restore
+        
+    - name: Run all tests
+      run: |
+        dotnet test tests/Unit/PointsEngine.Tests/PointsEngine.Api.Tests/PointsEngine.Api.Tests.csproj \
+          --configuration Release \
+          --no-build \
+          --verbosity normal \
+          --logger "trx;LogFileName=pointsengine-api-results.trx" \
+          --results-directory ./TestResults
+        
+        dotnet test tests/Unit/PointsEngine.Tests/PointsEngine.Application.Tests/PointsEngine.Application.Tests.csproj \
+          --configuration Release \
+          --no-build \
+          --verbosity normal \
+          --logger "trx;LogFileName=pointsengine-app-results.trx" \
+          --results-directory ./TestResults
+        
+        dotnet test tests/Unit/Rewards.Tests/Rewards.Api.Tests/Rewards.Api.Tests.csproj \
+          --configuration Release \
+          --no-build \
+          --verbosity normal \
+          --logger "trx;LogFileName=rewards-results.trx" \
+          --results-directory ./TestResults
+        
+        dotnet test tests/Unit/AuthTenant.Tests/AuthTenant.Api.Tests/AuthTenant.Api.Tests.csproj \
+          --configuration Release \
+          --no-build \
+          --verbosity normal \
+          --logger "trx;LogFileName=authtenant-results.trx" \
+          --results-directory ./TestResults
+        
+        dotnet test tests/Unit/EcommerceIntegration.Tests/EcommerceIntegration.Api.Tests/EcommerceIntegration.Api.Tests.csproj \
+          --configuration Release \
+          --no-build \
+          --verbosity normal \
+          --logger "trx;LogFileName=ecommerce-results.trx" \
+          --results-directory ./TestResults
+      continue-on-error: false
+      
+    - name: Publish test results
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      if: always()
+      with:
+        files: |
+          TestResults/**/*.trx
+        check_name: Unit Test Results Summary
+        comment_mode: always
