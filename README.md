@@ -98,6 +98,28 @@ Customer → RedemptionSaga → DeductPointsCommand → Points Engine
 
 ### Quick Start
 
+**See [`QUICKSTART.md`](QUICKSTART.md) for detailed commands and options.**
+
+```bash
+# Build and run everything in one command
+./scripts/run.sh -b
+
+# Or run in background
+./scripts/run.sh -b -d
+
+# Run tests
+./scripts/test.sh
+```
+
+**Service URLs:**
+- API Gateway: http://localhost:5000
+- Auth+Tenant: http://localhost:5001
+- Points Engine: http://localhost:5003
+- Rewards: http://localhost:5004
+- RabbitMQ UI: http://localhost:15672 (guest/guest)
+
+For detailed documentation on all available commands, see [`QUICKSTART.md`](QUICKSTART.md).
+
 1. **Clone the repository**
    ```bash
    git clone https://github.com/iaashu98/LoyaltyForge.git
