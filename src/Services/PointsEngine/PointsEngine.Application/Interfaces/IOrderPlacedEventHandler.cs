@@ -1,6 +1,6 @@
 using LoyaltyForge.Contracts.Events;
 
-namespace PointsEngine.Application.EventHandlers;
+namespace PointsEngine.Application.Interfaces;
 
 /// <summary>
 /// Handler for OrderPlaced events from e-commerce integrations.
