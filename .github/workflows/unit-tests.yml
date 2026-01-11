@@ -26,14 +26,37 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
       
-    - name: Build test projects
+    - name: Build all test projects
       run: |
-        dotnet build tests/Unit/Rewards.Application.Tests/Rewards.Application.Tests.csproj --configuration Release
-        dotnet build tests/Unit/PointsEngine.Application.Tests/PointsEngine.Application.Tests.csproj --configuration Release
+        dotnet build tests/Unit/PointsEngine.Tests/PointsEngine.Api.Tests/PointsEngine.Api.Tests.csproj --configuration Release
+        dotnet build tests/Unit/PointsEngine.Tests/PointsEngine.Application.Tests/PointsEngine.Application.Tests.csproj --configuration Release
+        dotnet build tests/Unit/Rewards.Tests/Rewards.Api.Tests/Rewards.Api.Tests.csproj --configuration Release
+        dotnet build tests/Unit/AuthTenant.Tests/AuthTenant.Api.Tests/AuthTenant.Api.Tests.csproj --configuration Release
+        dotnet build tests/Unit/EcommerceIntegration.Tests/EcommerceIntegration.Api.Tests/EcommerceIntegration.Api.Tests.csproj --configuration Release
         
-    - name: Run Rewards Service Tests
+    - name: Run PointsEngine.Api Tests
       run: |
-        dotnet test tests/Unit/Rewards.Application.Tests/Rewards.Application.Tests.csproj \
+        dotnet test tests/Unit/PointsEngine.Tests/PointsEngine.Api.Tests/PointsEngine.Api.Tests.csproj \
+          --no-build \
+          --configuration Release \
+          --verbosity normal \
+          --logger "trx;LogFileName=pointsengine-api-test-results.trx" \
+          --results-directory ./TestResults/PointsEngine.Api
+      continue-on-error: true
+      
+    - name: Run PointsEngine.Application Tests
+      run: |
+        dotnet test tests/Unit/PointsEngine.Tests/PointsEngine.Application.Tests/PointsEngine.Application.Tests.csproj \
+          --no-build \
+          --configuration Release \
+          --verbosity normal \
+          --logger "trx;LogFileName=pointsengine-app-test-results.trx" \
+          --results-directory ./TestResults/PointsEngine.Application
+      continue-on-error: true
+      
+    - name: Run Rewards.Api Tests
+      run: |
+        dotnet test tests/Unit/Rewards.Tests/Rewards.Api.Tests/Rewards.Api.Tests.csproj \
           --no-build \
           --configuration Release \
           --verbosity normal \
@@ -41,14 +64,24 @@ jobs:
           --results-directory ./TestResults/Rewards
       continue-on-error: true
       
-    - name: Run Points Engine Tests
+    - name: Run AuthTenant.Api Tests
       run: |
-        dotnet test tests/Unit/PointsEngine.Application.Tests/PointsEngine.Application.Tests.csproj \
+        dotnet test tests/Unit/AuthTenant.Tests/AuthTenant.Api.Tests/AuthTenant.Api.Tests.csproj \
           --no-build \
           --configuration Release \
           --verbosity normal \
-          --logger "trx;LogFileName=points-test-results.trx" \
-          --results-directory ./TestResults/PointsEngine
+          --logger "trx;LogFileName=authtenant-test-results.trx" \
+          --results-directory ./TestResults/AuthTenant
+      continue-on-error: true
+      
+    - name: Run EcommerceIntegration.Api Tests
+      run: |
+        dotnet test tests/Unit/EcommerceIntegration.Tests/EcommerceIntegration.Api.Tests/EcommerceIntegration.Api.Tests.csproj \
+          --no-build \
+          --configuration Release \
+          --verbosity normal \
+          --logger "trx;LogFileName=ecommerce-test-results.trx" \
+          --results-directory ./TestResults/EcommerceIntegration
       continue-on-error: true
       
     - name: Publish test results
