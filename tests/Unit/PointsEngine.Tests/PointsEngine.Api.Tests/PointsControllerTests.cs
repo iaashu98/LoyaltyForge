@@ -1,18 +1,14 @@
-using PointsEngine.Api.Controllers;
-using PointsEngine.Application.Interfaces;
-using Moq;
-using Xunit;
-using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using PointsEngine.Api.Controllers;
+using PointsEngine.Application.Interfaces;
 
-namespace PointsEngine.Api.Tests.Controllers;
+namespace PointsEngine.Api.Tests;
 
 public class PointsControllerTests
 {
     private readonly Mock<IBalanceService> _balanceServiceMock;
     private readonly Mock<ILedgerService> _ledgerServiceMock;
-    private readonly Mock<ILogger<PointsController>> _loggerMock;
     private readonly PointsController _controller;
 
     private readonly Guid _tenantId = Guid.NewGuid();
@@ -22,8 +18,8 @@ public class PointsControllerTests
     {
         _balanceServiceMock = new Mock<IBalanceService>();
         _ledgerServiceMock = new Mock<ILedgerService>();
-        _loggerMock = new Mock<ILogger<PointsController>>();
-        _controller = new PointsController(_balanceServiceMock.Object, _ledgerServiceMock.Object, _loggerMock.Object);
+        var loggerMock = new Mock<ILogger<PointsController>>();
+        _controller = new PointsController(_balanceServiceMock.Object, _ledgerServiceMock.Object, loggerMock.Object);
     }
 
     [Fact]
@@ -31,11 +27,11 @@ public class PointsControllerTests
     {
         // Arrange
         var balance = new BalanceResult(_customerId, 100, 50, 500, 200, DateTime.UtcNow);
-        _balanceServiceMock.Setup(x => x.GetBalanceAsync(_tenantId, _customerId, default))
+        _balanceServiceMock.Setup(x => x.GetBalanceAsync(_tenantId, _customerId, CancellationToken.None))
             .ReturnsAsync(balance);
 
         // Act
-        var result = await _controller.GetBalance(_tenantId, _customerId, default);
+        var result = await _controller.GetBalance(_tenantId, _customerId, CancellationToken.None);
 
         // Assert
         result.Result.Should().BeOfType<OkObjectResult>();
@@ -56,11 +52,11 @@ public class PointsControllerTests
         );
 
         var ledgerResult = new LedgerResult(Guid.NewGuid(), 100, true, null);
-        _ledgerServiceMock.Setup(x => x.EarnPointsAsync(It.IsAny<EarnPointsCommand>(), default))
+        _ledgerServiceMock.Setup(x => x.EarnPointsAsync(It.IsAny<EarnPointsCommand>(), CancellationToken.None))
             .ReturnsAsync(ledgerResult);
 
         // Act
-        var result = await _controller.EarnPoints(_tenantId, _customerId, request, default);
+        var result = await _controller.EarnPoints(_tenantId, _customerId, request, CancellationToken.None);
 
         // Assert
         result.Result.Should().BeOfType<OkObjectResult>();
@@ -77,11 +73,11 @@ public class PointsControllerTests
         );
 
         var ledgerResult = new LedgerResult(Guid.NewGuid(), 50, true, null);
-        _ledgerServiceMock.Setup(x => x.DeductPointsAsync(It.IsAny<DeductPointsCommand>(), default))
+        _ledgerServiceMock.Setup(x => x.DeductPointsAsync(It.IsAny<DeductPointsCommand>(), CancellationToken.None))
             .ReturnsAsync(ledgerResult);
 
         // Act
-        var result = await _controller.DeductPoints(_tenantId, _customerId, request, default);
+        var result = await _controller.DeductPoints(_tenantId, _customerId, request, CancellationToken.None);
 
         // Assert
         result.Result.Should().BeOfType<OkObjectResult>();
@@ -91,11 +87,11 @@ public class PointsControllerTests
     public async Task CheckSufficientPoints_ReturnsTrue()
     {
         // Arrange
-        _balanceServiceMock.Setup(x => x.HasSufficientPointsAsync(_tenantId, _customerId, 100, default))
+        _balanceServiceMock.Setup(x => x.HasSufficientPointsAsync(_tenantId, _customerId, 100, CancellationToken.None))
             .ReturnsAsync(true);
 
         // Act
-        var result = await _controller.CheckSufficientPoints(_tenantId, _customerId, 100, default);
+        var result = await _controller.CheckSufficientPoints(_tenantId, _customerId, 100, CancellationToken.None);
 
         // Assert
         result.Result.Should().BeOfType<OkObjectResult>();
